@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateMove, cleanLabel, menuInput } from '../src/core.js';
+import { validateMove, cleanLabel, menuInput, decodeInput } from '../src/core.js';
 
 const source = { pane_id: 'w1:p1', terminal_id: 'term-a', tab_id: 'w1:t1', workspace_id: 'w1' };
 const target = { pane_id: 'w2:p2', terminal_id: 'term-b', tab_id: 'w2:t2', workspace_id: 'w2' };
@@ -31,7 +31,7 @@ test('stale or invalid requests fail closed before a mutation', () => {
 
 test('untrusted terminal titles cannot inject terminal controls', () => {
   assert.equal(cleanLabel('hello\x1b[2J\nworld\x1b]52;c;secret\x07'), 'hello world');
-  assert.equal(cleanLabel('a\u202Eb\u009bc'), 'abc');
+  assert.equal(cleanLabel('a\u202Eb\u009bc'), 'ab'); // C1 CSI + c is a complete control sequence.
 });
 
 test('keyboard and mouse input identify selection without executing a move', () => {
@@ -42,4 +42,15 @@ test('keyboard and mouse input identify selection without executing a move', () 
   assert.deepEqual(menuInput('\x1b[<0;15;8M'), { type: 'click', row: 8 });
   assert.deepEqual(menuInput('\x1b[<0;15;8m'), { type: 'ignore' });
   assert.deepEqual(menuInput('\x03'), { type: 'quit' });
+});
+
+test('terminal input handles coalesced keys and fragmented mouse reports', () => {
+  assert.deepEqual(decodeInput('\x1b[B\x1b[B\r'), {
+    events: [{ type: 'down' }, { type: 'down' }, { type: 'accept' }], pending: ''
+  });
+  const partial = decodeInput('\x1b[<0;12;');
+  assert.equal(partial.events.length, 0);
+  assert.deepEqual(decodeInput(partial.pending + '8M').events, [{ type: 'click', row: 8 }]);
+  assert.equal(decodeInput('\x1b').pending, '\x1b');
+  assert.deepEqual(decodeInput('\x1b', true).events, [{ type: 'back' }]);
 });

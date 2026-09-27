@@ -1,0 +1,19 @@
+id = "jordanbelfort1.pane-tools"
+name = "Pane Tools"
+version = "0.1.0"
+min_herdr_version = "0.9.1"
+description = "Windows-native keyboard and mouse menu: move running panes into splits in another tab."
+platforms = ["windows"]
+
+[[actions]]
+id = "open"
+title = "Move a pane..."
+contexts = ["pane", "workspace"]
+command = ["node", "src/launch.js"]
+
+[[panes]]
+id = "menu"
+title = "Pane Tools"
+placement = "overlay"
+# launch.js sets cwd explicitly; Windows pane commands otherwise inherit repo cwd.
+command = ["node", "menu.js"]
