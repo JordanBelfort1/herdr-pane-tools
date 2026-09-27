@@ -28,5 +28,11 @@ Native Windows, Herdr 0.9.1, Node 22.22.3:
   identity retained. No active user terminal was moved.
 - Automated suite covers stale source/target identity, wrong tab, same-tab moves,
   invalid direction, terminal control injection and fragmented/coalesced input.
+- Duplicate invocation kept one menu, without replacing the original selection.
+- Closing the selected destination before confirming produced an error and kept
+  the source in its original tab (live Windows test).
+- Installation directly from GitHub and opening/cancelling its menu verified.
+- Physical mouse clicking and all terminal resize combinations have not been
+  manually validated; the input parser has automated mouse-report coverage.
 
 CI verifies Node tests and syntax on Windows. It does not prove live Herdr behavior.
